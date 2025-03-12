@@ -3,14 +3,17 @@ package local.fileserver.api.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import local.fileserver.api.models.File;
 import local.fileserver.api.models.File.Extension;
+import local.fileserver.api.repositories.FileRepository;
 
 @Service
 public class FileserverService {
-	private List<File> files = new ArrayList<File>();
+	@Autowired
+	FileRepository fileRepository;
 	
 	/**
 	 * Searches for the file by name
@@ -20,23 +23,20 @@ public class FileserverService {
 	 */
 	public File findByName(String name)
 	{
-		for (File file : files)
-			if (file.getName().equals(name))
-				return file;
-		return null;
+		return fileRepository.findByName(name);
 	}
 	
 	/**
-	 * Pushes an new file to the file array
+	 * Pushes an new file to the file array, if it's name does not exists yet
 	 * 
 	 * @param name the file name to add 
 	 * @return true if the file doesn't exist already, or false if it does.
 	 */
 	public boolean push(File file)
-	{
+	{	
 		if (this.findByName(file.getName()) != null)
 			return false;
-		files.add(file);
+		fileRepository.save(file);
 		return true;
 	}
 	
@@ -51,17 +51,17 @@ public class FileserverService {
         File fileToDelete = this.findByName(name);
         if (fileToDelete == null)
             return false;
-        files.remove(fileToDelete);
+        fileRepository.delete(fileToDelete);
         return true;
 	}
 	
 	/**
 	 * List all the current files in the array
 	 * 
-	 * @return the files array, it could be empty
+	 * @return the files array, it can be empty
 	 */
 	public List<File> list()
 	{
-		return files;
+		return fileRepository.findAll();
 	}
 }

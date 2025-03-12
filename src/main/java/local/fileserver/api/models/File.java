@@ -2,16 +2,25 @@ package local.fileserver.api.models;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.Getter;
 
 @Data
+@Entity
 public class File {	
 	public enum Extension {
 		mp4,
 		jpeg,
 		txt
 	}
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
 	
 	@Getter
 	private LocalDate createdAt;
