@@ -45,4 +45,16 @@ public class ApiRequestExceptionHandler {
 
         return new ResponseEntity<>(validationException, validationException.getHttpStatus());
     }
+    
+    @ExceptionHandler(value = { Exception.class })
+    public ResponseEntity<Object> handleUnknownException(Exception e) {    	
+    	HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    	
+    	ApiException apiException = new ApiException(
+                "An unknown error ocurred: " + e.getMessage(),
+                httpStatus,
+                httpStatus.value());
+    	
+        return new ResponseEntity<>(apiException, apiException.getHttpStatus());
+    }
 }

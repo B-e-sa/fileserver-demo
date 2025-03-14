@@ -45,7 +45,7 @@ public class FileserverController {
 	}
 	
 	@GetMapping()
-	public ResponseEntity<List<File>> listFiles()
+	public ResponseEntity<List<FileDTO>> listFiles()
 	{
 		return new ResponseEntity<>(server.list(), HttpStatus.OK);
 	}
