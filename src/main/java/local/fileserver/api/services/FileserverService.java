@@ -1,29 +1,46 @@
 package local.fileserver.api.services;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import local.fileserver.api.common.exceptions.ConflictException;
+import local.fileserver.api.common.exceptions.NotFoundException;
 import local.fileserver.api.models.File;
-import local.fileserver.api.models.File.Extension;
+import local.fileserver.api.models.FileDTO;
 import local.fileserver.api.repositories.FileRepository;
 
 @Service
 public class FileserverService {
 	@Autowired
-	FileRepository fileRepository;
+    private ModelMapper modelMapper;
+	
+	@Autowired
+	private FileRepository fileRepository;
+	
+	private File findByNameHelper(String name) {
+		File foundFile = fileRepository.findByName(name);
+		return foundFile;
+	}
 	
 	/**
 	 * Searches for the file by name
 	 * 
 	 * @param name the file name
-	 * @return the file if it exists, or null if not
+	 * @return the file if it exists
+	 * @throws NotFoundException, it the file does not exists
 	 */
-	public File findByName(String name)
+	public File findByName(String name) throws NotFoundException
 	{
-		return fileRepository.findByName(name);
+		File foundFile = this.findByNameHelper(name);
+		
+		if (foundFile == null)
+			throw new NotFoundException();
+		
+		return foundFile;
 	}
 	
 	/**
@@ -32,27 +49,27 @@ public class FileserverService {
 	 * @param name the file name to add 
 	 * @return true if the file doesn't exist already, or false if it does.
 	 */
-	public boolean push(File file)
+	public void push(FileDTO dto)
 	{	
-		if (this.findByName(file.getName()) != null)
-			return false;
-		fileRepository.save(file);
-		return true;
+		File foundFile = this.findByNameHelper(dto.getName());
+		
+		if (foundFile != null)
+			throw new ConflictException("A file with the same name already exists");
+		
+		fileRepository.save(dto.ToFile());
 	}
 	
 	/**
 	 * Delete the given file by name if it exists
 	 * 
 	 * @param name the file name to delete 
-	 * @return true if the file exists, or false if it doesn't.
+	 * @return true if the file exists
+	 * @throws NotFoundException, if the file does not exists
 	 */
-	public boolean delete(String name)
+	public void delete(String name) throws NotFoundException
 	{
         File fileToDelete = this.findByName(name);
-        if (fileToDelete == null)
-            return false;
         fileRepository.delete(fileToDelete);
-        return true;
 	}
 	
 	/**
@@ -62,6 +79,10 @@ public class FileserverService {
 	 */
 	public List<File> list()
 	{
-		return fileRepository.findAll();
+		 return fileRepository
+				 	.findAll();
+		//		 	.stream()
+	    //            .map(file -> modelMapper.map(file, FileDTO.class))
+	    //            .collect(Collectors.toList());
 	}
 }

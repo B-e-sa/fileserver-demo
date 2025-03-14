@@ -1,6 +1,11 @@
-package local.fileserver.api.controller;import java.util.List;
+package local.fileserver.api.controller;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,7 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import local.fileserver.api.models.File;
+import local.fileserver.api.models.FileDTO;
 import local.fileserver.api.services.FileserverService;
 
 @RestController()
@@ -17,39 +24,29 @@ public class FileserverController {
 	FileserverService server;
 	
 	@GetMapping("{name}")
-	public String findFile(@PathVariable String name)
+	public ResponseEntity<File> findFile(@PathVariable String name) throws NotFoundException
 	{
 		File foundFile = server.findByName(name);
-		if (foundFile == null)
-			return "Not found";
-		return "Found";
+		return new ResponseEntity<>(foundFile, HttpStatus.FOUND);
 	}
 	
 	@PostMapping()
-	public String pushFile(@RequestBody File file)
-	{	
-		if (file.getName() == null || 
-				file.getContent() == null ||
-				file.getExtension() == null)
-			return "Bad formated file";
-		boolean sucess = server.push(file);
-		if (!sucess)
-			return "File already exists";
-		return "File added";
+	public ResponseEntity<HttpStatus> pushFile(@Valid @RequestBody FileDTO file)
+	{			
+		server.push(file);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	@DeleteMapping("{name}")
-	public String deleteFile(@PathVariable("name") String name)
+	public ResponseEntity<HttpStatus> deleteFile(@PathVariable("name") String name) throws NotFoundException
 	{
-		boolean sucess = server.delete(name);
-		if (!sucess)
-			return "File does not exist";
-		return "Sucess";
+		server.delete(name);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
 	@GetMapping()
-	public List<File> listFiles()
+	public ResponseEntity<List<File>> listFiles()
 	{
-		return server.list();
+		return new ResponseEntity<>(server.list(), HttpStatus.OK);
 	}
 }
